@@ -15,27 +15,12 @@ Everything runs in Docker Compose — one `docker compose up --build` and you ha
 
 ## What's in here
 
-```
-CoinGecko API
-     │
-     ▼
-Airflow DAG 1 (every 1 min)
-     │  Avro + Schema Registry
-     ▼
-Kafka (3 brokers)  ──►  ClickHouse Kafka Engine  ──►  MergeTree (crypto_raw)
-                                                              │
-                                              Airflow DAG 2 (every 4 h)
-                                                              │
-                                                         dbt build
-                                                    ┌──────────────────────────┐
-                                                    │  stg_crypto_prices (view) │
-                                                    │  latest_prices  (table)   │
-                                                    │  ohlc_per_minute (table)  │
-                                                    └──────────────────────────┘
-                                                              │
-                                                         Grafana
-                                               (auto-provisioned dashboard)
-```
+![Architecture](docs/architecture.png)
+
+Airflow sits at the top as the orchestrator and drives two independent pipelines:
+
+- **DAG 1 (every minute):** fetches CoinGecko prices → serialises with Schema Registry (Avro) → produces to Kafka → ClickHouse Kafka Engine consumes into `crypto_raw`
+- **DAG 2 (every 4 hours):** spins up the dbt container → reads from `crypto_raw` → writes transformed mart tables back to ClickHouse → Grafana reads the marts for the dashboard
 
 The two DAGs are kept intentionally separate — ingestion runs every minute and is lightweight, while the dbt build runs every 4 hours since the transformations don't need to be fresher than that.
 
