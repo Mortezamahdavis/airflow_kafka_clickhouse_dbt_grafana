@@ -1,0 +1,77 @@
+version: 2
+
+models:
+  - name: stg_crypto_prices
+    description: >
+      Renames columns from the crypto_raw source table for the mart layer.
+      No type casting is performed here — ClickHouse stores native Float64/Int32
+      types after Avro deserialization at the Kafka Engine level.
+      Filters to the last 24 hours to keep the view lightweight.
+    config:
+      tags: ["staging", "crypto"]
+
+    columns:
+      - name: asset_id
+        description: CoinGecko asset identifier (e.g. 'bitcoin')
+        data_tests:
+          - not_null
+          - accepted_values:
+              values:
+                - bitcoin
+                - ethereum
+                - solana
+                - cardano
+                - dogecoin
+                - ripple
+                - polkadot
+                - chainlink
+                - litecoin
+                - avalanche-2
+
+      - name: symbol
+        description: Ticker symbol (e.g. 'btc')
+        data_tests:
+          - not_null
+
+      - name: name
+        description: Human-readable asset name (e.g. 'Bitcoin')
+        data_tests:
+          - not_null
+
+      - name: price_usd
+        description: Current price in USD
+        data_tests:
+          - not_null
+
+      - name: change_pct_24h
+        description: 24-hour price change percentage
+        data_tests:
+          - not_null
+
+      - name: volume_usd_24h
+        description: 24-hour trading volume in USD
+        data_tests:
+          - not_null
+
+      - name: market_cap_usd
+        description: Market capitalisation in USD
+        data_tests:
+          - not_null
+
+      - name: high_24h
+        description: 24-hour high price in USD
+        data_tests:
+          - not_null
+
+      - name: low_24h
+        description: 24-hour low price in USD
+        data_tests:
+          - not_null
+
+      - name: circulating_supply
+        description: Number of coins currently in circulation
+
+      - name: ingested_at
+        description: UTC timestamp when the record was fetched from CoinGecko
+        data_tests:
+          - not_null

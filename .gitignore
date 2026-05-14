@@ -1,0 +1,31 @@
+# Environment variables — never commit real credentials
+.env
+
+# dbt
+transformation/target/
+transformation/dbt_packages/
+transformation/logs/
+
+# Airflow
+airflow/logs/
+dags/__pycache__/
+dags/utils/__pycache__/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+
+# macOS
+.DS_Store
+
+# Docker
+*.log
+
+# Leftover / local-only files
+.envasda
+transformation/.user.yml
+logs/

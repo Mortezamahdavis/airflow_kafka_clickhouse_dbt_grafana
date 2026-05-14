@@ -1,0 +1,57 @@
+version: 2
+
+sources:
+  - name: crypto
+    description: >
+      Raw crypto market data ingested from CoinGecko via Kafka → ClickHouse.
+      All numeric fields are stored as native Float64/Int32 types after Avro
+      deserialization at the Kafka Engine level.
+    database: default
+    schema: default
+    tables:
+      - name: crypto_raw
+        description: >
+          MergeTree table populated by the crypto_raw_mv materialized view.
+          One row per asset per ingestion cycle (every 1 minute via Airflow DAG 1).
+          Partitioned by day, TTL 30 days.
+        columns:
+          - name: id
+            description: CoinGecko asset identifier (e.g. 'bitcoin')
+            data_tests:
+              - not_null
+          - name: symbol
+            description: Ticker symbol (e.g. 'btc')
+            data_tests:
+              - not_null
+          - name: name
+            description: Human-readable asset name (e.g. 'Bitcoin')
+            data_tests:
+              - not_null
+          - name: current_price
+            description: Current price in USD (Float64)
+            data_tests:
+              - not_null
+          - name: market_cap
+            description: Market capitalisation in USD (Float64)
+          - name: market_cap_rank
+            description: CoinGecko market cap rank (Int32)
+          - name: total_volume
+            description: 24-hour trading volume in USD (Float64)
+          - name: high_24h
+            description: 24-hour high price in USD (Float64)
+          - name: low_24h
+            description: 24-hour low price in USD (Float64)
+          - name: price_change_24h
+            description: Absolute price change over 24 hours in USD (Float64)
+          - name: price_change_percentage_24h
+            description: Percentage price change over 24 hours (Float64)
+          - name: circulating_supply
+            description: Number of coins in circulation (Float64)
+          - name: total_supply
+            description: Total coin supply (Float64, nullable)
+          - name: max_supply
+            description: Maximum possible supply (Float64, nullable)
+          - name: ingested_at
+            description: UTC timestamp when the record was fetched from CoinGecko
+            data_tests:
+              - not_null

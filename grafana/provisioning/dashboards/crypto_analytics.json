@@ -1,0 +1,191 @@
+{
+  "title": "Crypto Analytics",
+  "uid": "crypto-analytics",
+  "schemaVersion": 38,
+  "version": 1,
+  "refresh": "1m",
+  "time": { "from": "now-3h", "to": "now" },
+  "templating": {
+    "list": [
+      {
+        "name": "asset",
+        "type": "query",
+        "label": "Asset",
+        "multi": true,
+        "includeAll": true,
+        "current": { "text": "All", "value": "$__all" },
+        "datasource": { "type": "grafana-clickhouse-datasource", "uid": "clickhouse-crypto" },
+        "query": "SELECT DISTINCT symbol FROM default.latest_prices ORDER BY symbol"
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 1,
+      "title": "Bitcoin Price (USD)",
+      "type": "stat",
+      "gridPos": { "x": 0, "y": 0, "w": 4, "h": 4 },
+      "datasource": { "type": "grafana-clickhouse-datasource", "uid": "clickhouse-crypto" },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "textMode": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"] }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "currencyUSD",
+          "decimals": 2,
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red", "value": null },
+              { "color": "yellow", "value": 50000 },
+              { "color": "green", "value": 90000 }
+            ]
+          }
+        }
+      },
+      "targets": [
+        {
+          "datasource": { "type": "grafana-clickhouse-datasource", "uid": "clickhouse-crypto" },
+          "rawSql": "SELECT last_updated AS time, latest_price_usd AS value FROM default.latest_prices WHERE symbol = 'btc' ORDER BY time DESC LIMIT 1",
+          "format": "table"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "24h Change % by Asset",
+      "type": "bargauge",
+      "gridPos": { "x": 4, "y": 0, "w": 10, "h": 4 },
+      "datasource": { "type": "grafana-clickhouse-datasource", "uid": "clickhouse-crypto" },
+      "options": {
+        "orientation": "horizontal",
+        "reduceOptions": { "calcs": ["lastNotNull"] }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "decimals": 2,
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red", "value": null },
+              { "color": "yellow", "value": 0 },
+              { "color": "green", "value": 2 }
+            ]
+          }
+        }
+      },
+      "targets": [
+        {
+          "datasource": { "type": "grafana-clickhouse-datasource", "uid": "clickhouse-crypto" },
+          "rawSql": "SELECT symbol, change_pct_24h FROM default.latest_prices WHERE symbol IN (${asset:singlequote}) ORDER BY change_pct_24h DESC",
+          "format": "table"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "Market Cap (USD)",
+      "type": "bargauge",
+      "gridPos": { "x": 14, "y": 0, "w": 10, "h": 4 },
+      "datasource": { "type": "grafana-clickhouse-datasource", "uid": "clickhouse-crypto" },
+      "options": {
+        "orientation": "horizontal",
+        "reduceOptions": { "calcs": ["lastNotNull"] }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "currencyUSD",
+          "decimals": 0
+        }
+      },
+      "targets": [
+        {
+          "datasource": { "type": "grafana-clickhouse-datasource", "uid": "clickhouse-crypto" },
+          "rawSql": "SELECT symbol, market_cap_usd FROM default.latest_prices WHERE symbol IN (${asset:singlequote}) ORDER BY market_cap_usd DESC",
+          "format": "table"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "Price Over Time (USD)",
+      "type": "timeseries",
+      "gridPos": { "x": 0, "y": 4, "w": 24, "h": 8 },
+      "datasource": { "type": "grafana-clickhouse-datasource", "uid": "clickhouse-crypto" },
+      "options": {
+        "tooltip": { "mode": "multi" },
+        "legend": { "displayMode": "table", "placement": "right" }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "currencyUSD",
+          "custom": { "lineWidth": 2 }
+        }
+      },
+      "targets": [
+        {
+          "datasource": { "type": "grafana-clickhouse-datasource", "uid": "clickhouse-crypto" },
+          "rawSql": "SELECT ingested_at AS time, symbol, current_price FROM default.crypto_raw WHERE ingested_at >= $__fromTime AND ingested_at <= $__toTime AND symbol IN (${asset:singlequote}) ORDER BY time ASC",
+          "format": "table"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "title": "OHLC Candlestick (per minute)",
+      "type": "candlestick",
+      "gridPos": { "x": 0, "y": 12, "w": 24, "h": 9 },
+      "datasource": { "type": "grafana-clickhouse-datasource", "uid": "clickhouse-crypto" },
+      "options": {
+        "candleStyle": "candles",
+        "colorStrategy": "open-close",
+        "bullColor": "green",
+        "bearColor": "red",
+        "openKey": "open",
+        "highKey": "high",
+        "lowKey": "low",
+        "closeKey": "close"
+      },
+      "fieldConfig": {
+        "defaults": { "unit": "currencyUSD" }
+      },
+      "targets": [
+        {
+          "datasource": { "type": "grafana-clickhouse-datasource", "uid": "clickhouse-crypto" },
+          "rawSql": "SELECT minute AS time, open, high, low, close FROM default.ohlc_per_minute WHERE minute >= $__fromTime AND minute <= $__toTime AND symbol = 'btc' ORDER BY minute ASC",
+          "format": "table"
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "title": "24h Volume (USD)",
+      "type": "timeseries",
+      "gridPos": { "x": 0, "y": 21, "w": 24, "h": 7 },
+      "datasource": { "type": "grafana-clickhouse-datasource", "uid": "clickhouse-crypto" },
+      "options": {
+        "tooltip": { "mode": "multi" },
+        "legend": { "displayMode": "table", "placement": "right" }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "currencyUSD",
+          "custom": { "fillOpacity": 10, "lineWidth": 1 }
+        }
+      },
+      "targets": [
+        {
+          "datasource": { "type": "grafana-clickhouse-datasource", "uid": "clickhouse-crypto" },
+          "rawSql": "SELECT ingested_at AS time, symbol, total_volume FROM default.crypto_raw WHERE ingested_at >= $__fromTime AND ingested_at <= $__toTime AND symbol IN (${asset:singlequote}) ORDER BY time ASC",
+          "format": "table"
+        }
+      ]
+    }
+  ]
+}

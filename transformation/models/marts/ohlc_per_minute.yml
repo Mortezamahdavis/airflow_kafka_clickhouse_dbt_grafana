@@ -1,0 +1,51 @@
+version: 2
+
+models:
+  - name: ohlc_per_minute
+    description: >
+      Open/High/Low/Close candlestick data aggregated per asset per minute bucket.
+      Uses argMin/argMax by ingested_at for open/close, min/max for low/high.
+      Powers the candlestick panel in Grafana. Ordered by asset_id, minute.
+    config:
+      tags: ["mart", "crypto", "ohlc"]
+
+    columns:
+      - name: asset_id
+        description: CoinGecko asset identifier
+        data_tests:
+          - not_null
+
+      - name: symbol
+        description: Ticker symbol
+        data_tests:
+          - not_null
+
+      - name: minute
+        description: Start of the one-minute bucket (toStartOfMinute of ingested_at)
+        data_tests:
+          - not_null
+
+      - name: open
+        description: First price recorded in the minute bucket
+        data_tests:
+          - not_null
+
+      - name: high
+        description: Highest price in the minute bucket
+        data_tests:
+          - not_null
+
+      - name: low
+        description: Lowest price in the minute bucket
+        data_tests:
+          - not_null
+
+      - name: close
+        description: Last price recorded in the minute bucket
+        data_tests:
+          - not_null
+
+      - name: ticks
+        description: Number of raw ingestion records that fell in this bucket
+        data_tests:
+          - not_null

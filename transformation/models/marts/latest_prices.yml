@@ -1,0 +1,63 @@
+version: 2
+
+models:
+  - name: latest_prices
+    description: >
+      Latest price snapshot per asset — one row per asset, refreshed every time
+      dbt build runs. Uses argMax() to pick the most recent value per field.
+      Powers Grafana stat tiles, bar gauges, and the ticker row.
+    config:
+      tags: ["mart", "crypto"]
+
+    columns:
+      - name: asset_id
+        description: CoinGecko asset identifier
+        data_tests:
+          - not_null
+          - unique
+
+      - name: symbol
+        description: Ticker symbol
+        data_tests:
+          - not_null
+          - unique
+
+      - name: name
+        description: Human-readable asset name
+        data_tests:
+          - not_null
+
+      - name: latest_price_usd
+        description: Most recent price in USD
+        data_tests:
+          - not_null
+
+      - name: change_pct_24h
+        description: 24-hour price change percentage at the latest snapshot
+        data_tests:
+          - not_null
+
+      - name: high_24h
+        description: 24-hour high price in USD at the latest snapshot
+        data_tests:
+          - not_null
+
+      - name: low_24h
+        description: 24-hour low price in USD at the latest snapshot
+        data_tests:
+          - not_null
+
+      - name: volume_usd_24h
+        description: 24-hour trading volume in USD at the latest snapshot
+        data_tests:
+          - not_null
+
+      - name: market_cap_usd
+        description: Market capitalisation in USD at the latest snapshot
+        data_tests:
+          - not_null
+
+      - name: last_updated
+        description: Timestamp of the latest ingested record used for this row
+        data_tests:
+          - not_null

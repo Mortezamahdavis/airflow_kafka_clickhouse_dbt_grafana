@@ -1,0 +1,22 @@
+crypto_analytics:
+  # Default target for local dbt CLI usage (points to the Docker ClickHouse on localhost)
+  target: dev
+  outputs:
+
+    dev:
+      type: clickhouse
+      schema: default
+      host: localhost      # ClickHouse exposed on localhost:8123 when running locally
+      port: 8123
+      user: "{{ env_var('CLICKHOUSE_USER', 'default') }}"
+      password: "{{ env_var('CLICKHOUSE_PASSWORD', '') }}"
+      secure: false
+
+    prod:
+      type: clickhouse
+      schema: default
+      host: clickhouse     # Docker service name — reachable inside the compose network
+      port: 8123
+      user: "{{ env_var('CLICKHOUSE_USER', 'default') }}"
+      password: "{{ env_var('CLICKHOUSE_PASSWORD', '') }}"
+      secure: false
